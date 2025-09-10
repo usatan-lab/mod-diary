@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="editor">
+  <header class="ed-head">
+    <div class="pill">📝 New Entry</div>
+    <h2>今日のきもちを残そう</h2>
+    <p class="sub">気分（Lv0〜10）と一言メモ、必要なら画像も添えて。</p>
+  </header>
+
+  <form method="post" enctype="multipart/form-data" class="ed-grid">
+
+    <!-- 左：ムード -->
+    <div class="card">
+      <label class="label">ムード <span id="lv" class="lv">5</span>/10</label>
+
+      <div class="mood-face-wrap">
+        <div class="mood-face" id="mood_face" aria-hidden="true">😐</div>
+        <div class="mood-fx" id="mood_fx" aria-hidden="true"></div>
+      </div>
+
+      <div class="mood-slider">
+        <span class="mood-edge" title="Sad" aria-hidden="true">😭</span>
+        <input
+          type="range" id="mood_level" name="mood_level"
+          min="0" max="10" step="1" value="5"
+        
+        
+          oninput="document.getElementById('lv').textContent=this.value; paintRange(this); updateFace(this.value)">
+        <span class="mood-edge" title="Happy" aria-hidden="true">😄</span>
+      </div>
+
+      <div class="mood-ticks"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>
+      <div class="mood-label"><span id="mood_text">Lv5 Neutral</span></div>
+    </div>
+
+    <!-- 右：ジャンル/本文/画像 -->
+    <div class="card">
+      <label class="label">ジャンル</label>
+      <input type="hidden" name="main_category" id="main_category" value="日常・ライフログ">
+      <div class="chip-row" role="radiogroup" aria-label="ジャンル">
+        <button type="button" class="chip active" data-value="日常・ライフログ">☕️ 日常</button>
+        <button type="button" class="chip" data-value="趣味・推し活">⭐️ 推し活</button>
+        <button type="button" class="chip" data-value="家族・育児">🧺 家族</button>
+        <button type="button" class="chip" data-value="ポジティブログ">🌈 ポジティブログ</button>
+        <button type="button" class="chip" data-value="パートナー・恋愛">❤️ 恋愛</button>
+      </div>
+
+      <label class="label mt">内容</label>
+      <textarea name="content" id="content" rows="7" placeholder="今日はこんなことがあった…"></textarea>
+
+      <label class="label mt">画像を添付（任意）</label>
+      <div class="drop" id="dropzone">
+        <input type="file" name="image" id="image" accept="image/*" style="display:none;">
+        <img id="preview" style="display:none;max-width:160px;margin-top:.5rem;border-radius:8px;">
+        <script>
+        document.getElementById('image').addEventListener('change', e=>{
+          const f = e.target.files?.[0]; if(!f) return;
+          const url = URL.createObjectURL(f);
+          const img = document.getElementById('preview');
+          img.src = url; img.style.display='block';
+        });
+        </script>
+        <div class="drop-inner">
+          <button type="button" id="pick" class="btn-subtle">ファイルを選ぶ</button>
+          <span class="hint">または ここにドロップ</span>
+        </div>
+        <button type="button" id="clearImg" class="link hidden">× クリア</button>
+      </div>
+
+      <div class="actions">
+        <span class="hint">⌘/Ctrl + Enter で投稿</span>
+        <button type="submit" class="btn-primary">投稿する</button>
+      </div>
+    </div>
+  </form>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  // ===== ジャンル：チップ → hidden input =====
+  const chipRow = document.querySelector('.chip-row');
+  const catInput = document.getElementById('main_category');
+  chipRow?.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.chip'); if (!btn) return;
+    [...chipRow.querySelectorAll('.chip')].forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    catInput.value = btn.dataset.value;
+  });
+
+  // ===== 画像ドロップ＆プレビュー =====
+  const drop = document.getElementById('dropzone');
+  const pick = document.getElementById('pick');
+  const input = document.getElementById('image');
+  const prev = document.getElementById('preview');
+  const clearBtn = document.getElementById('clearImg');
+
+  function showPreview(file){
+    const url = URL.createObjectURL(file);
+    prev.src = url; prev.classList.remove('hidden'); clearBtn.classList.remove('hidden');
+  }
+  function clearPreview(){
+    input.value = ""; prev.src = ""; prev.classList.add('hidden'); clearBtn.classList.add('hidden');
+  }
+  pick?.addEventListener('click', ()=> input?.click());
+  input?.addEventListener('change', ()=> { const f = input.files?.[0]; if (f) showPreview(f); });
+  ['dragenter','dragover'].forEach(ev=> drop?.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(ev=> drop?.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('drag'); }));
+  drop?.addEventListener('drop', e=>{
+    if (!e.dataTransfer?.files?.length) return;
+    const f = e.dataTransfer.files[0]; if (!f.type.startsWith('image/')) return;
+    input.files = e.dataTransfer.files; showPreview(f);
+  });
+  clearBtn?.addEventListener('click', clearPreview);
+
+  // ===== ムードUI =====
+  const LEVEL_MAP = [
+    {emoji:"😭", text:"Very Sad"},{emoji:"😢", text:"Sad"},{emoji:"😣", text:"Upset"},
+    {emoji:"😟", text:"Anxious"},{emoji:"😮‍💨", text:"Tired"},{emoji:"😐", text:"Neutral"},
+    {emoji:"🙏", text:"Grateful"},{emoji:"🙂", text:"Content"},{emoji:"😄", text:"Happy"},
+    {emoji:"🤩", text:"Very Happy"},{emoji:"🥳", text:"Euphoric"}
+  ];
+  const REDUCED_MOTION = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches || false;
+
+  function colorFor(level){
+    const hue = 210 - (level/10)*170; // 0→青 / 10→暖色
+    return `hsl(${hue} 75% 50%)`;
+  }
+  function paintRange(el){
+    const min = +el.min || 0, max = +el.max || 10;
+    const val = ((el.value - min) / (max - min)) * 100;
+    const c = colorFor(+el.value);
+    el.style.background = `linear-gradient(to right, ${c} 0%, ${c} ${val}%, #ddd ${val}%, #ddd 100%)`;
+  }
+
+  function applyFaceClasses(level){
+    const face = document.getElementById('mood_face');
+    face.classList.remove('pulse-soft','pulse-strong','bounce');
+    if (level <= 3)      face.classList.add('pulse-soft');
+    else if (level >= 8) face.classList.add('pulse-strong');
+    if (!REDUCED_MOTION){
+      face.classList.add('bounce');
+      setTimeout(()=>face.classList.remove('bounce'), 650);
+    }
+  }
+
+  // 生成→CSSアニメ→終わったら削除
+  function spawnFx(cls, text, styles){
+    const s = document.createElement('span');
+    s.className = cls;
+    s.textContent = text;
+    Object.assign(s.style, styles);
+    s.addEventListener('animationend', ()=> s.remove());
+    return s;
+  }
+
+  // エフェクト本体（左右に散らばる＆端で切れない）
+  function updateFX(level){
+    const fx = document.getElementById('mood_fx');
+    if (!fx) return;
+    fx.innerHTML = '';
+    if (REDUCED_MOTION) return;
+
+    const PAD = 3; // 左右3%を空ける
+    const randX = () => (PAD + Math.random()*(100 - PAD*2)).toFixed(2);
+
+    if (Number(level) <= 3){
+      for (let i=0; i<5; i++){
+        fx.appendChild(spawnFx('fx-drop','💧',{
+          left: `calc(${randX()}% - .5rem)`,
+          animationDelay: (Math.random()*0.5)+'s',
+          fontSize: (0.9 + Math.random()*0.3)+'rem'
+        }));
+      }
+    } else if (Number(level) >= 8){
+      for (let i=0; i<7; i++){
+        fx.appendChild(spawnFx('fx-sparkle', Math.random()<0.7?'✨':'🌟', {
+          left: `calc(${randX()}% - .5rem)`,
+          animationDelay: (Math.random()*0.6)+'s',
+          fontSize: (0.9 + Math.random()*0.5)+'rem'
+        }));
+      }
+    }
+  }
+
+  function updateFace(level){
+    level = Number(level);
+    const face = document.getElementById('mood_face');
+    const text = document.getElementById('mood_text');
+    const item = LEVEL_MAP[level] || {emoji:"😐", text:"Neutral"};
+    face.textContent = item.emoji;
+    if (text) text.textContent = `Lv${level} ${item.text}`;
+    const lvSpan = document.getElementById('lv');
+    if (lvSpan) lvSpan.style.color = colorFor(level);
+    paintRange(document.getElementById('mood_level'));
+    applyFaceClasses(level);
+    updateFX(level);
+  }
+
+  // 初期反映
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const el = document.getElementById('mood_level');
+    if (el){ paintRange(el); updateFace(el.value); }
+  });
+</script>
+{% endblock %}

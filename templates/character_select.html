@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>相棒アニマルを選ぼう（最大3体）</h2>
+
+<form method="post" id="char-form" class="char-select">
+  <div class="char-grid">
+    {% for c in all_chars %}
+      <label class="char-card">
+        <input type="checkbox" name="characters" value="{{ c.name }}" class="char-check">
+        <img src="{{ url_for('static', filename=c.img) }}" alt="{{ c.name }}" class="char-icon">
+        <span class="char-name">{{ c.name }}</span>
+      </label>
+    {% endfor %}
+  </div>
+
+  <button type="submit" class="primary-btn" disabled>決定</button>
+</form>
+
+<script>
+/* ---- 最大3体までチェックできるようにする ---- */
+const checks  = document.querySelectorAll('.char-check');
+const submit  = document.querySelector('.primary-btn');
+
+function update() {
+  const picked = [...checks].filter(c => c.checked);
+  submit.disabled = picked.length === 0;
+
+  if (picked.length >= 3) {            // 3体選んだら
+    checks.forEach(c => {              // 未選択を一時 disable
+      if (!c.checked) c.disabled = true;
+    });
+  } else {
+    checks.forEach(c => c.disabled = false);
+  }
+}
+checks.forEach(c => c.addEventListener('change', update));
+update();                              // 初期化
+</script>
+{% endblock %}

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}mod-diary{% endblock %}</title>
+
+  {# 既存の外部CSS（任意） #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+  <style>
+    :root{
+      --bg: #f7fbff;
+      --fg: #1a1a1a;
+      --sub: #667085;
+      --glass: rgba(255,255,255,0.6);
+      --blur: blur(14px);
+      --radius: 18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.10);
+      --brand: #78c6f0;
+      --brand2:#f8a3d3;
+      --brand3:#b0e1b2;
+      --link: #0b6bcb;
+    }
+    /* 背景（やさしいグラデ） */
+    body{
+      margin:0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      color: var(--fg);
+      background:
+        radial-gradient(1200px 600px at -10% -10%, #eaf6ff 10%, transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, #fff0fa 10%, transparent 60%),
+        radial-gradient(800px 500px at 50% 120%, #effaf1 10%, transparent 60%),
+        var(--bg);
+    }
+
+    /* コンテナ */
+    .container{ max-width: 1080px; padding: 20px; margin: 0 auto; }
+
+    /* ヘッダー（ガラス） */
+    .app-header{
+      position: sticky; top: 0; z-index: 40;
+      background: linear-gradient(to bottom, rgba(255,255,255,.75), rgba(255,255,255,.35));
+      -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+      box-shadow: 0 6px 14px rgba(0,0,0,.06);
+    }
+    .header-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 16px; padding: 14px 20px; max-width: 1080px; margin:0 auto;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit;
+    }
+    .brand-logo{
+      width:36px; height:36px; border-radius: 10px; background:#fff; box-shadow: var(--shadow);
+      display:grid; place-items:center; font-weight:800;
+    }
+    .brand-name{ font-weight:800; letter-spacing:.2px; }
+    .brand-sub{ font-size:12px; color: var(--sub); margin-left: 4px; }
+
+    /* ナビ（ピル） */
+    .nav{
+      display:flex; align-items:center; gap: 8px;
+    }
+    .nav a{
+      text-decoration:none; color: var(--fg); font-weight:700;
+      background:#fff; padding:10px 12px; border-radius: 999px; box-shadow: var(--shadow);
+      transition: transform .15s ease, box-shadow .15s ease, background .15s;
+    }
+    .nav a:hover{ transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+    .nav a.active{ background: #eaf6ff; color:#084e8a; }
+
+    /* モバイル */
+    .nav-toggle{ display:none; }
+    @media (max-width: 780px){
+      .nav{ display:none; }
+      .nav.open{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+      .nav-toggle{
+        display:inline-flex; align-items:center; justify-content:center;
+        padding: 8px 10px; border-radius: 10px; background:#fff; box-shadow: var(--shadow);
+        border: none; font-weight:700;
+      }
+      .header-inner{ flex-wrap: wrap; }
+    }
+
+    /* フラッシュ */
+    .flash-list{
+      list-style:none; padding:0; margin: 16px 0 0;
+      display:grid; gap:10px;
+    }
+    .flash-list li{
+      background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+      border-radius: 12px; padding: 10px 12px; box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.6);
+    }
+
+    /* コンテンツカードの基本（任意で再利用） */
+    .glass-card{
+      background: var(--glass);
+      -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px;
+    }
+
+    a{ color: var(--link); }
+    main{ padding: 24px 0 48px; }
+    footer{
+      color: var(--sub); font-size:12px; text-align:center; padding: 18px 0 30px;
+    }
+  </style>
+
+  {# 各ページで追加したい<head>要素があればここに #}
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="{{ url_for('index') }}">
+        <div class="brand-logo">MōD</div>
+        <div>
+          <div class="brand-name">mod-diary</div>
+          <div class="brand-sub">やさしく、つづく日記。</div>
+        </div>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" onclick="toggleNav()">メニュー</button>
+
+      {% set cur = request.endpoint %}
+      <nav id="primary-nav" class="nav" aria-label="メインナビゲーション">
+        <a href="{{ url_for('new_diary') }}" class="{{ 'active' if cur == 'new_diary' else '' }}">📝 日記を書く</a>
+        <a href="{{ url_for('calendar_view') }}" class="{{ 'active' if cur == 'calendar_view' else '' }}">📅 カレンダー</a>
+        <a href="{{ url_for('stats') }}" class="{{ 'active' if cur == 'stats' else '' }}">📈 グラフ</a>
+        <a href="{{ url_for('character_select') }}" class="{{ 'active' if cur == 'character_select' else '' }}">🐶 相棒</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    {# フラッシュメッセージ #}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flash-list">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <footer>
+    © {{  now().year if false else '' }} mod-diary — made with 🐾
+  </footer>
+
+  <script>
+    function toggleNav(){
+      const nav = document.getElementById('primary-nav');
+      const btn = document.querySelector('.nav-toggle');
+      const isOpen = nav.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+  </script>
+  
+{% block page_scripts %}{% endblock %}
+</body>
+</html>

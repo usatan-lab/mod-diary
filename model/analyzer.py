@@ -29,6 +29,7 @@ def split_text_into_sentences(text):
     sentences = re.split(r'[。！？\n]', text)
     return [s.strip() for s in sentences if s.strip()]
 
+
 # 感情分析（感情＋ひとことリアクションを返す）
 def analyze_sentiment(text):
     sentences = split_text_into_sentences(text)
@@ -51,3 +52,50 @@ def analyze_sentiment(text):
 
     message = reaction_map.get(emotion, "")
     return emotion, message
+
+def compliment_for(genre, sentiment, character="ねこ"):
+    """
+    感情分析結果に基づいてほめ言葉を返す関数
+    """
+    messages = {
+        "positive": {
+            "一般": "とっても良い感じだね！",
+            "推し活": "推しとの素敵な時間を過ごせたんだね！",
+            "日常": "今日はいい一日だったんだね！",
+            "子供": "子供との時間って特別だよね！",
+            "ペット": "ペットとの時間は癒されるね！",
+            "恋愛": "素敵な恋愛の時間だったんだね！"
+        },
+        "neutral": {
+            "一般": "いつもどおりの一日だったかな？",
+            "推し活": "推しのことを考える時間は大切だよね",
+            "日常": "平和な日常も素晴らしいものだよ",
+            "子供": "子供の成長を見守る日々は貴重だね",
+            "ペット": "ペットと過ごす穏やかな時間いいね",
+            "恋愛": "二人の関係、大切にしていこうね"
+        },
+        "negative": {
+            "一般": "大変だったけど、書き出せてえらいね！",
+            "推し活": "推しのことを思うだけで明日も頑張れるよ！",
+            "日常": "つらい日もあるけど、明日はきっといい日になるよ",
+            "子供": "子育ては大変だけど、あなたは頑張ってるよ！",
+            "ペット": "ペットのことを思う気持ちは素晴らしいよ",
+            "恋愛": "恋愛も時には難しいけど、きっと良くなるよ"
+        }
+    }
+    
+    # もしジャンルが辞書になければ一般を使用
+    if genre not in messages[sentiment]:
+        genre = "一般"
+    
+    # キャラクターに合わせた語尾を追加
+    endings = {
+        "ねこ": "にゃ～",
+        "いぬ": "わん！",
+        "うさぎ": "ぴょん♪",
+        "ペンギン": "ぺん！",
+        "くま": "くまー"
+    }
+    
+    ending = endings.get(character, "")
+    return messages[sentiment][genre] + " " + ending

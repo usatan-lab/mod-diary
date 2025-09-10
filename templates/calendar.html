@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>📅 日記カレンダー</h2>
+<div id="calendar"></div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<!-- 日本語ロケール（必要なら） -->
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales/ja.global.min.js"></script>
+
+
+<!-- サーバーから渡されたイベントデータ（JSON） -->
+<script type="application/json" id="events-data">
+  {{ events|tojson|safe }}
+</script>
+
+{% block page_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('calendar');
+  const eventsData = JSON.parse(document.getElementById('events-data').textContent);
+
+  const calendar = new FullCalendar.Calendar(el, {
+    initialView : 'dayGridMonth',
+    firstDay    : 0,
+    locale      : 'ja',
+    dayMaxEventRows: true,
+    events      : eventsData,
+
+    // アイコン（SVG）＋タイトルを組み立てる
+    eventContent: function(arg) {
+      const iconUrl = arg.event.extendedProps.iconUrl;
+      const wrap = document.createElement('span');
+      wrap.innerHTML =
+        (iconUrl ? `<img class="ev-icon" src="${iconUrl}" alt="">` : '') +
+        `<span>${arg.event.title}</span>`;
+      return { domNodes: [wrap] };
+    },
+
+    eventClick : (info) => {
+      info.jsEvent.preventDefault();
+      if (info.event.url) window.location.href = info.event.url;
+    },
+    dateClick  : (info) => {
+      window.location.href = '/diary/' + info.dateStr;
+    }
+  });
+
+  calendar.render();
+});
+</script>
+{% endblock %}
+{% endblock %}

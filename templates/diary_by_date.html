@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>{{ date }} の日記</h2>
+
+  {% if entries %}
+    {% for id, content, sentiment, mood_tag, created_at, image_path in entries %}
+      <div class="entry-card">
+        <div class="meta">
+          {{ '😄' if sentiment=='positive' else '😐' if sentiment=='neutral' else '😢' }}
+          {{ sentiment.capitalize() }} | ✨ {{ mood_tag }} | {{ created_at[11:16] }}
+        </div>
+
+        {% if image_path %}
+          <div class="thumb">
+            <img src="{{ url_for('static', filename=image_path) }}"
+                 style="max-width:120px; height:auto; margin-top:0.5em;">
+          </div>
+        {% endif %}
+
+        <p><a href="{{ url_for('diary_detail', diary_id=id) }}">詳細を見る</a></p>
+
+        <div class="content">
+          {{ content }}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>この日はまだ日記がないみたい！</p>
+  {% endif %}
+{% endblock %}

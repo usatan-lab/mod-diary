@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>✏️ 日記を編集する</h2>
+
+<form method="POST" action="{{ url_for('edit_diary', diary_id=diary_id) }}">
+
+  <!-- 🌟 ジャンル選択 -->
+  <div>
+    <label for="main_category">ジャンル：</label>
+    <select name="main_category" id="main_category">
+      {% for g in main_categories %}
+        <option value="{{ g }}" {% if g == main_category %}selected{% endif %}>{{ g }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- ✍️ 本文 -->
+  <div>
+    <label for="content">内容：</label>
+    <textarea name="content" id="content" rows="10" required>{{ content }}</textarea>
+  </div>
+
+  <!-- 😊 感情選択 -->
+  <div>
+    <label>感情：</label>
+    <div class="mood-tags">
+      {% for tag in mood_tags %}
+        <label>
+          <input type="radio"
+                 name="sentiment"
+                 value="{{ tag }}"
+                 {% if tag == sentiment %}checked{% endif %}>
+          {{ tag }}
+        </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  <button type="submit">更新する</button>
+</form>
+
+<!-- モーダル表示用ボタン -->
+<button type="button" onclick="showDeleteModal()" style="background-color: #fdd; color: red; margin-top: 1em;">
+    🗑 この日記を削除する
+  </button>
+<!-- 削除確認モーダル -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal-content">
+      <p>この日記を本当に削除してもよいですか？</p>
+      <form method="POST" action="{{ url_for('delete_diary', diary_id=diary_id) }}">
+        <button type="submit" style="margin-right: 1em;">はい</button>
+        <button type="button" onclick="hideDeleteModal()">キャンセル</button>
+      </form>
+    </div>
+  </div>
+
+  
+  
+ <style>
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: #fff;
+      padding: 2em;
+      border-radius: 1em;
+      box-shadow: 0 0 10px #888;
+      text-align: center;
+    }
+    button {
+    border-radius: 6px;
+    padding: 0.5em 1.2em;
+    }
+    
+    .modal-overlay {
+    animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+    }
+
+    </style>
+<script>
+    function showDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    function hideDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+    </script>
+            
+
+{% endblock %}

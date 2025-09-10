@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>📈 感情のふりかえりグラフ</h2>
+
+<div style="max-width: 700px; margin: 0 auto;">
+  <h3>🫧 感情の推移（Lv0〜10）</h3>
+  <canvas id="emotionChart"></canvas>
+
+  <h3>🎨 ムードレベル分布（Lv0〜10）</h3>
+  <canvas id="moodChart"></canvas>
+
+  <h3>🗂 ジャンル別の日記数</h3>
+  <canvas id="genreChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Python側: data = [[created_at, mood_level, main_category], ...]
+const rawData = {{ data|tojson|safe }};
+
+const labels = [];
+const levels  = [];       // 0〜10 の配列
+const genreCount = {};
+const levelCount = Array.from({length: 11}, () => 0); // 0..10
+
+rawData.forEach(entry => {
+  const date  = String(entry[0]).split(" ")[0];
+  const level = Number(entry[1]);      // 0〜10
+  const genre = entry[2] || "その他";
+
+  labels.push(date);
+  levels.push(level);
+
+  // 分布カウント
+  if (!Number.isNaN(level) && level >= 0 && level <= 10) {
+    levelCount[level]++;
+  }
+  genreCount[genre] = (genreCount[genre] || 0) + 1;
+});
+
+// ① ムード推移（折れ線）
+new Chart(document.getElementById('emotionChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      label: 'ムード（0〜10）',
+      data: levels,
+      fill: false,
+      tension: 0.3
+    }]
+  },
+  options: {
+    scales: {
+      y: { min: 0, max: 10, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+// ② ムード分布（棒グラフ：0〜10）
+new Chart(document.getElementById('moodChart'), {
+  type: 'bar',
+  data: {
+    labels: [...Array(11).keys()], // 0,1,...,10
+    datasets: [{
+      label: '件数',
+      data: levelCount
+    }]
+  },
+  options: {
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+// ③ ジャンル別件数（横棒）
+new Chart(document.getElementById('genreChart'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(genreCount),
+    datasets: [{
+      label: '投稿数',
+      data: Object.values(genreCount)
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+  }
+});
+</script>
+{% endblock %}

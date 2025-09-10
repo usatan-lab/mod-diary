@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>{{ created_at }} の日記（詳細）</h2>
+
+  <p>ジャンル: {{ genre }}</p>
+  <p>ムード: {{ sentiment }} / {{ mood_tag }}</p>
+  <div class="content">
+    {{ content }}
+  </div>
+
+  {% if image_path %}
+    <div class="diary-image">
+      <h3>添付画像</h3>
+      <img src="{{ url_for('static', filename=image_path) }}"
+           style="max-width:100%; height:auto; border-radius:8px;">
+    </div>
+  {% endif %}
+
+  <p><a href="{{ url_for('index') }}">一覧に戻る</a></p>
+{% endblock %}

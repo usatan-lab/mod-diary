@@ -1,0 +1,53 @@
+<!-- {% extends 'base.html' %}
+{% block content %}
+<h1>ムードタグを選択してください</h1>
+
+<div class="content-preview">
+    <p>{{ content }}</p>
+    <p>ジャンル: {{ genre }}</p>
+    <p>感情: {{ emotion_ja }}</p>
+    <p>メッセージ: {{ message }}</p>
+</div>
+
+<form method="POST" action="{{ url_for('diary_mood') }}" id="mood-form">
+    <!-- デバッグ用に値を表示 -->
+    <!-- <div style="background: #eee; padding: 10px; margin-bottom: 10px;">
+        <p>デバッグ情報（本番では削除）:</p>
+        <p>content: {{ content|truncate(30) }}</p>
+        <p>genre: {{ genre }}</p>
+        <p>emotion: {{ emotion }}</p>
+    </div>
+    
+    <!-- 隠しフィールド -->
+    <!-- <input type="hidden" name="content" value="{{ content }}">
+    <input type="hidden" name="genre" value="{{ genre }}">
+    <input type="hidden" name="sentiment" value="{{ lavel }}">
+    <input type="hidden" name="message" value="{{ message }}">
+    
+    <div class="mood-tags">
+        <label><input type="radio" name="mood_tag" value="楽しい" checked> 楽しい</label>
+        <label><input type="radio" name="mood_tag" value="悲しい"> 悲しい</label>
+        <label><input type="radio" name="mood_tag" value="怒り"> 怒り</label>
+        <label><input type="radio" name="mood_tag" value="不安"> 不安</label>
+        <label><input type="radio" name="mood_tag" value="幸せ"> 幸せ</label>
+        <label><input type="radio" name="mood_tag" value="疲れ"> 疲労</label>
+        <label><input type="radio" name="mood_tag" value="感謝"> 感謝</label>
+        <label><input type="radio" name="mood_tag" value="感動"> 感動</label>
+        <!-- 他のタグも追加できます -->
+    <!-- </div>
+    
+    <button type="submit">日記を保存</button>
+</form>
+
+<!-- JavaScriptでフォーム内容を検証 -->
+<!-- <script>
+document.getElementById('mood-form').onsubmit = function() {
+    var content = document.querySelector('input[name="content"]').value;
+    if (!content) {
+        alert('日記の内容が取得できませんでした。やり直してください。');
+        return false;
+    }
+    return true;
+};
+</script>
+{% endblock %} --> 
